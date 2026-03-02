@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Dominando Bancos de Dados</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a12;
+    --card: #13131f;
+    --blue: #2979ff;
+    --orange: #ff5722;
+    --green: #00e676;
+    --red: #ff1744;
+    --yellow: #ffea00;
+    --purple: #7c4dff;
+    --white: #f0f0f8;
+    --muted: #6b6b88;
+    --border: rgba(255,255,255,0.07);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.35) 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.25) 0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 80%, rgba(255,255,255,0.25) 0%, transparent 100%),
+      radial-gradient(1px 1px at 10% 60%, rgba(255,255,255,0.18) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 70%, rgba(255,255,255,0.18) 0%, transparent 100%),
+      radial-gradient(1px 1px at 35% 50%, rgba(255,255,255,0.12) 0%, transparent 100%),
+      radial-gradient(1px 1px at 65% 20%, rgba(255,255,255,0.12) 0%, transparent 100%);
+    pointer-events: none; z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    width: 700px; height: 700px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(41,121,255,0.10) 0%, transparent 70%);
+    top: -200px; left: -150px;
+    pointer-events: none; z-index: 0;
+    animation: blobMove 10s ease-in-out infinite alternate;
+  }
+
+  @keyframes blobMove {
+    from { transform: translate(0,0); }
+    to   { transform: translate(220px, 120px); }
+  }
+
+  header {
+    position: relative; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 40px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,18,0.85);
+    backdrop-filter: blur(12px);
+    flex-shrink: 0;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem; letter-spacing: 3px;
+    background: linear-gradient(90deg, var(--blue), var(--purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  .progress-wrap { display: flex; align-items: center; gap: 12px; }
+  .q-counter { font-size: 0.82rem; color: var(--muted); font-weight: 500; letter-spacing: 1px; }
+  .progress-bar-outer { width: 220px; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-bar-inner {
+    height: 100%; background: linear-gradient(90deg, var(--blue), var(--purple));
+    border-radius: 99px; transition: width 0.5s cubic-bezier(.4,0,.2,1);
+  }
+  .score-badge {
+    background: rgba(41,121,255,0.13); border: 1px solid rgba(41,121,255,0.28);
+    border-radius: 99px; padding: 5px 16px;
+    font-size: 0.88rem; font-weight: 700; color: var(--blue); letter-spacing: 1px;
+  }
+
+  .screen {
+    position: relative; z-index: 5; flex: 1;
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 24px 20px; overflow-y: auto;
+  }
+  .screen.active { display: flex; }
+
+  /* INTRO */
+  .intro-tag {
+    font-size: 0.72rem; letter-spacing: 4px; color: var(--orange);
+    text-transform: uppercase; font-weight: 700;
+    border: 1px solid rgba(255,87,34,0.3); border-radius: 99px;
+    padding: 4px 14px; margin-bottom: 18px;
+    animation: fadeUp 0.6s ease both;
+  }
+  #screen-intro .title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.8rem, 7vw, 6.5rem);
+    letter-spacing: 5px; line-height: 1; text-align: center;
+    background: linear-gradient(135deg, #fff 30%, var(--blue) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  #screen-intro .subtitle {
+    margin-top: 12px; font-size: 1rem; color: var(--muted);
+    letter-spacing: 2px; text-transform: uppercase; text-align: center;
+    animation: fadeUp 0.6s 0.2s ease both;
+  }
+  .module-row { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; justify-content: center; animation: fadeUp 0.6s 0.28s ease both; }
+  .module-badge { border-radius: 10px; padding: 10px 20px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; gap: 7px; }
+  .module-badge.m1 { background: rgba(255,87,34,0.12); border: 1px solid rgba(255,87,34,0.3); color: var(--orange); }
+  .module-badge.m2 { background: rgba(41,121,255,0.12); border: 1px solid rgba(41,121,255,0.3); color: var(--blue); }
+  .chip-row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; justify-content: center; animation: fadeUp 0.6s 0.34s ease both; }
+  .chip { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 99px; padding: 5px 14px; font-size: 0.78rem; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+  .btn-start {
+    margin-top: 32px; padding: 16px 56px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; letter-spacing: 4px;
+    border: none; border-radius: 8px;
+    background: linear-gradient(135deg, var(--blue), var(--purple));
+    color: #fff; cursor: pointer;
+    box-shadow: 0 0 40px rgba(41,121,255,0.35);
+    transition: transform 0.15s, box-shadow 0.15s;
+    animation: fadeUp 0.6s 0.4s ease both;
+  }
+  .btn-start:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 0 60px rgba(41,121,255,0.55); }
+
+  /* QUESTION */
+  .module-pill {
+    font-size: 0.7rem; letter-spacing: 3px; font-weight: 700;
+    text-transform: uppercase; border-radius: 99px;
+    padding: 3px 12px; margin-bottom: 8px;
+    animation: fadeUp 0.35s ease both;
+  }
+  .module-pill.mod1 { background: rgba(255,87,34,0.15); color: var(--orange); border: 1px solid rgba(255,87,34,0.3); }
+  .module-pill.mod2 { background: rgba(41,121,255,0.15); color: var(--blue); border: 1px solid rgba(41,121,255,0.3); }
+
+  .question-number { font-family: 'Bebas Neue', sans-serif; font-size: 0.9rem; letter-spacing: 4px; color: var(--muted); margin-bottom: 8px; animation: fadeUp 0.35s 0.04s ease both; }
+  .question-text { font-size: clamp(1.05rem, 2.4vw, 1.7rem); font-weight: 700; text-align: center; max-width: 900px; line-height: 1.35; margin-bottom: 26px; animation: fadeUp 0.35s 0.08s ease both; }
+  .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; width: 100%; max-width: 900px; animation: fadeUp 0.35s 0.12s ease both; }
+
+  .option-btn {
+    background: var(--card); border: 2px solid var(--border); border-radius: 12px;
+    padding: 17px 20px; text-align: left; cursor: pointer;
+    color: var(--white); font-family: 'DM Sans', sans-serif;
+    font-size: 0.93rem; font-weight: 500;
+    display: flex; align-items: center; gap: 12px;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    position: relative; overflow: hidden; line-height: 1.4;
+  }
+  .option-btn::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(41,121,255,0.08), transparent); opacity: 0; transition: opacity 0.2s; }
+  .option-btn:hover:not(:disabled)::before { opacity: 1; }
+  .option-btn:hover:not(:disabled) { border-color: rgba(41,121,255,0.45); transform: translateY(-2px); }
+  .option-letter { width: 32px; height: 32px; min-width: 32px; border-radius: 7px; background: rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 1.05rem; letter-spacing: 1px; transition: background 0.2s; }
+  .option-btn.correct { border-color: var(--green) !important; background: rgba(0,230,118,0.08) !important; animation: pulse-green 0.5s ease; }
+  .option-btn.correct .option-letter { background: var(--green); color: #000; }
+  .option-btn.wrong { border-color: var(--red) !important; background: rgba(255,23,68,0.08) !important; animation: shake 0.4s ease; }
+  .option-btn.wrong .option-letter { background: var(--red); color: #fff; }
+  .option-btn:disabled { cursor: default; }
+
+  .feedback-toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    padding: 12px 28px; border-radius: 10px;
+    font-weight: 700; font-size: 1rem;
+    display: flex; align-items: center; gap: 8px;
+    transition: transform 0.35s cubic-bezier(.4,0,.2,1), opacity 0.35s;
+    opacity: 0; z-index: 100; white-space: nowrap;
+  }
+  .feedback-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  .feedback-toast.correct-toast { background: rgba(0,230,118,0.13); border: 1px solid var(--green); color: var(--green); }
+  .feedback-toast.wrong-toast { background: rgba(255,23,68,0.1); border: 1px solid var(--red); color: var(--red); }
+
+  .top-row { display: flex; align-items: center; gap: 16px; margin-bottom: 4px; }
+  .timer-ring { width: 60px; height: 60px; position: relative; flex-shrink: 0; }
+  .timer-ring svg { transform: rotate(-90deg); }
+  .timer-ring circle.bg { fill: none; stroke: var(--border); stroke-width: 4; }
+  .timer-ring circle.fg { fill: none; stroke: var(--blue); stroke-width: 4; stroke-linecap: round; stroke-dasharray: 163; stroke-dashoffset: 0; transition: stroke-dashoffset 1s linear, stroke 0.3s; }
+  .timer-number { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Bebas Neue', sans-serif; font-size: 1.3rem; color: var(--white); }
+
+  /* RESULTS */
+  #screen-result .result-big { font-family: 'Bebas Neue', sans-serif; font-size: clamp(4rem, 11vw, 9rem); letter-spacing: 4px; line-height: 1; animation: scaleIn 0.6s cubic-bezier(.34,1.56,.64,1) both; }
+  .result-msg { font-size: 1.35rem; font-weight: 700; margin-top: 8px; text-align: center; animation: fadeUp 0.5s 0.2s ease both; }
+  .result-sub { font-size: 0.95rem; color: var(--muted); margin-top: 5px; text-align: center; animation: fadeUp 0.5s 0.28s ease both; }
+  .stats-row { display: flex; gap: 16px; margin-top: 24px; flex-wrap: wrap; justify-content: center; animation: fadeUp 0.5s 0.34s ease both; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 26px; text-align: center; }
+  .stat-card .sv { font-family: 'Bebas Neue', sans-serif; font-size: 2.1rem; }
+  .stat-card .sl { font-size: 0.73rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+  .module-breakdown { display: flex; gap: 14px; margin-top: 14px; flex-wrap: wrap; justify-content: center; animation: fadeUp 0.5s 0.4s ease both; }
+  .mod-stat { border-radius: 10px; padding: 12px 22px; text-align: center; }
+  .mod-stat.m1 { background: rgba(255,87,34,0.1); border: 1px solid rgba(255,87,34,0.25); }
+  .mod-stat.m2 { background: rgba(41,121,255,0.1); border: 1px solid rgba(41,121,255,0.25); }
+  .mod-stat .mt { font-size: 0.68rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+  .mod-stat.m1 .mt { color: var(--orange); }
+  .mod-stat.m2 .mt { color: var(--blue); }
+  .mod-stat .mv { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; }
+  .btn-restart { margin-top: 24px; padding: 14px 44px; font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 3px; border: 2px solid var(--blue); border-radius: 8px; background: transparent; color: var(--blue); cursor: pointer; transition: background 0.2s, color 0.2s, transform 0.15s; animation: fadeUp 0.5s 0.46s ease both; }
+  .btn-restart:hover { background: var(--blue); color: #fff; transform: translateY(-2px); }
+
+  #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 200; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes scaleIn { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+  @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(0,230,118,0.5); } 70% { box-shadow: 0 0 0 14px rgba(0,230,118,0); } 100% { box-shadow: 0 0 0 0 rgba(0,230,118,0); } }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); } }
+
+  @media (max-width: 640px) {
+    .options-grid { grid-template-columns: 1fr; }
+    header { padding: 12px 16px; }
+    .progress-bar-outer { width: 100px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">DB QUIZ</div>
+  <div class="progress-wrap">
+    <span class="q-counter" id="q-counter">0 / 20</span>
+    <div class="progress-bar-outer"><div class="progress-bar-inner" id="progress-bar" style="width:0%"></div></div>
+  </div>
+  <div class="score-badge">⭐ <span id="score-hdr">0</span> pts</div>
+</header>
+
+<!-- INTRO -->
+<div class="screen active" id="screen-intro">
+  <div class="intro-tag">🎓 Quiz Interativo para Sala de Aula</div>
+  <div class="title">DOMINANDO</div>
+  <div class="title" style="font-size:clamp(1.5rem,4vw,3.5rem);margin-top:-6px;">BANCOS DE DADOS</div>
+  <div class="subtitle">Fundamentos, Modelagem &amp; Projeto Conceitual</div>
+  <div class="module-row">
+    <div class="module-badge m1">🗄️ Módulo 1 — Fundamentos (10 questões)</div>
+    <div class="module-badge m2">🔷 Módulo 2 — Modelagem Conceitual (10 questões)</div>
+  </div>
+  <div class="chip-row">
+    <div class="chip"><span>📋</span> 20 Questões</div>
+    <div class="chip"><span>⏱️</span> 20s por pergunta</div>
+    <div class="chip"><span>🏆</span> 100 pts cada</div>
+    <div class="chip"><span>⚡</span> Bônus por velocidade</div>
+  </div>
+  <button class="btn-start" onclick="startQuiz()">INICIAR QUIZ</button>
+  <div style="margin-top:22px;font-size:0.88rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;animation:fadeUp 0.6s 0.5s ease both;">&#128104;&#8205;&#127979; Professor Pedro Oliveira</div>
+</div>
+
+<!-- QUESTION -->
+<div class="screen" id="screen-question">
+  <div class="top-row">
+    <div class="timer-ring">
+      <svg width="60" height="60" viewBox="0 0 64 64">
+        <circle class="bg" cx="32" cy="32" r="26"/>
+        <circle class="fg" id="timer-circle" cx="32" cy="32" r="26"/>
+      </svg>
+      <div class="timer-number" id="timer-num">20</div>
+    </div>
+  </div>
+  <div class="module-pill mod1" id="module-pill">MÓDULO 1</div>
+  <div class="question-number" id="q-number">PERGUNTA 1 DE 20</div>
+  <div class="question-text" id="q-text"></div>
+  <div class="options-grid" id="options-grid"></div>
+</div>
+
+<!-- RESULT -->
+<div class="screen" id="screen-result">
+  <div class="result-big" id="result-pct">0%</div>
+  <div class="result-msg" id="result-msg"></div>
+  <div class="result-sub" id="result-sub"></div>
+  <div class="stats-row">
+    <div class="stat-card"><div class="sv" id="res-score" style="color:var(--blue)">0</div><div class="sl">Pontuação</div></div>
+    <div class="stat-card"><div class="sv" id="res-correct" style="color:var(--green)">0</div><div class="sl">Acertos</div></div>
+    <div class="stat-card"><div class="sv" id="res-wrong" style="color:var(--red)">0</div><div class="sl">Erros</div></div>
+    <div class="stat-card"><div class="sv" id="res-time" style="color:var(--yellow)">0s</div><div class="sl">Tempo médio</div></div>
+  </div>
+  <div class="module-breakdown">
+    <div class="mod-stat m1"><div class="mt">🗄️ Fundamentos</div><div class="mv" id="res-mod1">0/10</div></div>
+    <div class="mod-stat m2"><div class="mt">🔷 Modelagem</div><div class="mv" id="res-mod2">0/10</div></div>
+  </div>
+  <button class="btn-restart" onclick="restartQuiz()">↺ JOGAR NOVAMENTE</button>
+</div>
+
+<div class="feedback-toast" id="feedback-toast"></div>
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+const questions = [
+  // ── MÓDULO 1: DOMINANDO BANCOS DE DADOS ──
+  { module:1, q:"De acordo com o conteúdo, qual é a melhor definição de um banco de dados?", options:["Um software para criação de planilhas eletrônicas","Um conjunto organizado de dados relacionados que espelham aspectos do mundo real","Uma linguagem de programação para manipular informações","Um sistema operacional especializado em armazenamento"], correct:1 },
+  { module:1, q:"Usando a 'Analogia da Biblioteca', o que representa o SGBD?", options:["Os livros armazenados nas prateleiras","O prédio físico da biblioteca","O bibliotecário experiente que organiza, protege e encontra os livros","Os leitores que consultam os livros"], correct:2 },
+  { module:1, q:"Qual das alternativas representa a evolução correta de Dado → Informação → Conhecimento?", options:["'25' → 'A temperatura é 25°C' → 'Levar casaco pois a temperatura cairá'","'Levar casaco' → '25°C' → '25'","'Temperatura' → 'Clima' → 'Previsão'","'25°C' → '25' → 'Tempo frio'"], correct:0 },
+  { module:1, q:"O 'A' nas propriedades ACID significa Atomicidade. O que isso garante?", options:["Que transações simultâneas não se interferem","Que dados confirmados permanecem gravados após falhas","Que o banco muda apenas entre estados válidos","Que a transação é uma unidade única: ou tudo é executado, ou nada é gravado"], correct:3 },
+  { module:1, q:"Qual propriedade ACID garante que transações simultâneas NÃO interferem umas nas outras?", options:["Atomicidade","Consistência","Isolamento","Durabilidade"], correct:2 },
+  { module:1, q:"Para qual cenário o banco de dados RELACIONAL é mais indicado segundo o material?", options:["Big Data, Redes Sociais e IoT","Cache em tempo real e catálogos dinâmicos","Sistemas Financeiros, ERPs, CRMs e aplicações corporativas","Grafos e pares chave-valor sem esquemas fixos"], correct:2 },
+  { module:1, q:"Qual é a característica principal que diferencia o NoSQL do banco Relacional?", options:["O NoSQL utiliza SQL como linguagem padrão","O NoSQL foca em flexibilidade e escalabilidade horizontal, sem esquemas fixos","O NoSQL só armazena dados em tabelas","O NoSQL garante ACID em todos os casos"], correct:1 },
+  { module:1, q:"No Banco de Dados Relacional, qual elemento CONECTA tabelas de forma lógica?", options:["Índice de performance","Chave Estrangeira (Foreign Key)","Trigger de atualização","View materializada"], correct:1 },
+  { module:1, q:"Qual é a ordem CORRETA das fases do Ciclo de Vida de um projeto de banco de dados?", options:["Modelo Físico → Lógico → Conceitual → Levantamento de Requisitos","Levantamento de Requisitos → Conceitual → Lógico → Físico","Conceitual → Levantamento de Requisitos → Físico → Lógico","Lógico → Levantamento de Requisitos → Conceitual → Físico"], correct:1 },
+  { module:1, q:"Qual é o principal DESAFIO estratégico de 'Capital Humano' nos bancos de dados?", options:["Dificuldade em fazer backup dos dados","Falta de linguagens de programação compatíveis","Exigência de profissionais qualificados (DBAs) para manutenção e otimização contínua","Impossibilidade de compartilhamento simultâneo de dados"], correct:2 },
+
+  // ── MÓDULO 2: LEVANTAMENTO DE REQUISITOS & PROJETO CONCEITUAL ──
+  { module:2, q:"O que é o Levantamento de Requisitos no contexto de banco de dados?", options:["Processo de criar tabelas e índices no SGBD","Processo de identificar necessidades de informação dos usuários e regras de negócio","Técnica para otimizar consultas SQL","Método para instalar e configurar o banco de dados"], correct:1 },
+  { module:2, q:"Um erro na fase de Levantamento de Requisitos pode custar até quanto mais para ser corrigido no futuro?", options:["10x mais","50x mais","100x mais","1000x mais"], correct:2 },
+  { module:2, q:"Qual técnica de elicitação consiste em ACOMPANHAR o dia a dia do usuário para identificar necessidades ocultas?", options:["Entrevista","Questionário","Prototipação","Observação"], correct:3 },
+  { module:2, q:"Identifique o tipo de requisito: 'Um aluno só pode se matricular se não tiver dívidas'.", options:["Requisito de Dados","Requisito Funcional","Regra de Negócio","Requisito Não-Funcional"], correct:2 },
+  { module:2, q:"O Projeto Conceitual foca em entender ___ será armazenado, independente de qualquer SGBD.", options:["COMO","ONDE","QUANDO","O QUÊ"], correct:3 },
+  { module:2, q:"Qual é a diferença entre MER e DER?", options:["São sinônimos — representam exatamente a mesma coisa","MER é o modelo abstrato/conceitual; DER é a representação gráfica visual","MER é para bancos relacionais; DER para NoSQL","MER é a fase física; DER é a fase lógica"], correct:1 },
+  { module:2, q:"Um atributo DERIVADO é aquele que...", options:["Pode ser dividido em partes menores (ex: Endereço → Rua, Número)","Pode possuir vários valores para uma mesma ocorrência (ex: Telefone)","É calculado a partir de outros atributos (ex: Idade via Data de Nascimento)","Identifica unicamente cada registro da entidade"], correct:2 },
+  { module:2, q:"O que define uma ENTIDADE FRACA no MER?", options:["Uma entidade com poucos atributos","Uma entidade que depende de outra para existir e não possui chave própria","Uma entidade que se relaciona com muitas outras","Uma entidade criada após a fase de validação"], correct:1 },
+  { module:2, q:"No exercício prático (sistema de cursos), qual a cardinalidade entre Alunos e Cursos?", options:["1:1 (Um para Um)","1:N (Um para Muitos)","N:1 (Muitos para Um)","N:N (Muitos para Muitos)"], correct:3 },
+  { module:2, q:"Qual dos erros pertence à categoria 'Lógica e Associações' no Projeto Conceitual?", options:["Não identificar atributos chave para distinguir registros únicos","Ignorar restrições e regras vitais do cliente","Confundir cardinalidades 1:N com N:N","Modelar sem confirmar o entendimento com o usuário"], correct:2 }
+];
+
+const TOTAL_TIME = 20, POINTS_BASE = 100;
+let currentQ=0, score=0, correctCount=0, wrongCount=0, mod1Correct=0, mod2Correct=0;
+let timerInterval=null, timeLeft=TOTAL_TIME, timesUsed=[], answered=false;
+
+function startQuiz(){
+  currentQ=0;score=0;correctCount=0;wrongCount=0;mod1Correct=0;mod2Correct=0;timesUsed=[];
+  showScreen('screen-question'); loadQuestion();
+}
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
+function loadQuestion(){
+  answered=false;
+  const q=questions[currentQ];
+  const pill=document.getElementById('module-pill');
+  if(q.module===1){ pill.textContent='🗄️ MÓDULO 1 — FUNDAMENTOS'; pill.className='module-pill mod1'; }
+  else { pill.textContent='🔷 MÓDULO 2 — MODELAGEM CONCEITUAL'; pill.className='module-pill mod2'; }
+  document.getElementById('q-number').textContent=`PERGUNTA ${currentQ+1} DE ${questions.length}`;
+  document.getElementById('q-text').textContent=q.q;
+  document.getElementById('q-counter').textContent=`${currentQ+1} / ${questions.length}`;
+  document.getElementById('progress-bar').style.width=`${(currentQ/questions.length)*100}%`;
+  const grid=document.getElementById('options-grid'); grid.innerHTML='';
+  ['A','B','C','D'].forEach((l,i)=>{
+    const btn=document.createElement('button'); btn.className='option-btn';
+    btn.innerHTML=`<span class="option-letter">${l}</span>${q.options[i]}`;
+    btn.onclick=()=>selectAnswer(i,btn); grid.appendChild(btn);
+  });
+  startTimer();
+}
+
+function startTimer(){
+  timeLeft=TOTAL_TIME;
+  const circle=document.getElementById('timer-circle'), numEl=document.getElementById('timer-num');
+  circle.style.stroke='var(--blue)'; circle.style.strokeDashoffset=0; numEl.textContent=TOTAL_TIME;
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    timeLeft--; numEl.textContent=timeLeft;
+    circle.style.strokeDashoffset=163*(1-timeLeft/TOTAL_TIME);
+    if(timeLeft<=5) circle.style.stroke='var(--red)';
+    else if(timeLeft<=10) circle.style.stroke='var(--orange)';
+    if(timeLeft<=0){ clearInterval(timerInterval); timesUsed.push(TOTAL_TIME); timeExpired(); }
+  },1000);
+}
+
+function timeExpired(){
+  if(answered) return; answered=true; wrongCount++;
+  const btns=document.querySelectorAll('.option-btn'); btns.forEach(b=>b.disabled=true);
+  btns[questions[currentQ].correct].classList.add('correct');
+  showToast('⏰ Tempo esgotado!',false); setTimeout(nextQuestion,1800);
+}
+
+function selectAnswer(idx,btn){
+  if(answered) return; answered=true; clearInterval(timerInterval);
+  timesUsed.push(TOTAL_TIME-timeLeft);
+  const q=questions[currentQ]; const btns=document.querySelectorAll('.option-btn'); btns.forEach(b=>b.disabled=true);
+  if(idx===q.correct){
+    btn.classList.add('correct');
+    const bonus=Math.max(0,Math.floor((timeLeft/TOTAL_TIME)*50)); const pts=POINTS_BASE+bonus;
+    score+=pts; correctCount++;
+    if(q.module===1) mod1Correct++; else mod2Correct++;
+    document.getElementById('score-hdr').textContent=score;
+    showToast(`✅ Correto! +${pts} pts`,true);
+  } else { btn.classList.add('wrong'); btns[q.correct].classList.add('correct'); wrongCount++; showToast('❌ Errado!',false); }
+  setTimeout(nextQuestion,1800);
+}
+
+function nextQuestion(){ hideFeedback(); currentQ++; if(currentQ<questions.length) loadQuestion(); else showResults(); }
+
+function showToast(msg,ok){ const t=document.getElementById('feedback-toast'); t.textContent=msg; t.className='feedback-toast '+(ok?'correct-toast':'wrong-toast')+' show'; }
+function hideFeedback(){ document.getElementById('feedback-toast').classList.remove('show'); }
+
+function showResults(){
+  const pct=Math.round((correctCount/questions.length)*100);
+  const avgTime=timesUsed.length?Math.round(timesUsed.reduce((a,b)=>a+b,0)/timesUsed.length):0;
+  document.getElementById('result-pct').textContent=`${pct}%`;
+  document.getElementById('res-score').textContent=score;
+  document.getElementById('res-correct').textContent=correctCount;
+  document.getElementById('res-wrong').textContent=wrongCount;
+  document.getElementById('res-time').textContent=`${avgTime}s`;
+  document.getElementById('res-mod1').textContent=`${mod1Correct}/10`;
+  document.getElementById('res-mod2').textContent=`${mod2Correct}/10`;
+  document.getElementById('progress-bar').style.width='100%';
+  let msg,sub;
+  if(pct===100){msg='🏆 PERFEITO! Mestre dos Dados!';sub='Você acertou todas as 20 questões. Incrível!';}
+  else if(pct>=80){msg='🎉 Excelente! Muito bem!';sub='Você domina Fundamentos e Modelagem de Dados!';}
+  else if(pct>=60){msg='👍 Bom trabalho!';sub='Revise os tópicos que errou para fixar o conteúdo.';}
+  else if(pct>=40){msg='📚 Pode melhorar!';sub='Revise o material das duas aulas e tente novamente.';}
+  else{msg='🔄 Continue estudando!';sub='Não desanime — releia o conteúdo e tente de novo!';}
+  document.getElementById('result-msg').textContent=msg;
+  document.getElementById('result-sub').textContent=sub;
+  showScreen('screen-result');
+  if(pct>=60) launchConfetti();
+}
+
+function restartQuiz(){ document.getElementById('score-hdr').textContent=0; document.getElementById('progress-bar').style.width='0%'; showScreen('screen-intro'); }
+
+function launchConfetti(){
+  const canvas=document.getElementById('confetti-canvas'), ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  const colors=['#2979ff','#ff5722','#00e676','#ffea00','#7c4dff','#ff4081'];
+  const pieces=Array.from({length:140},()=>({ x:Math.random()*canvas.width, y:Math.random()*-canvas.height, w:Math.random()*10+5, h:Math.random()*6+3, color:colors[Math.floor(Math.random()*colors.length)], rot:Math.random()*Math.PI*2, vx:(Math.random()-0.5)*3, vy:Math.random()*4+2, vr:(Math.random()-0.5)*0.15 }));
+  let frame=0;
+  function draw(){ ctx.clearRect(0,0,canvas.width,canvas.height); pieces.forEach(p=>{ ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle=p.color; ctx.globalAlpha=0.85; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore(); p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr; }); frame++; if(frame<240) requestAnimationFrame(draw); else ctx.clearRect(0,0,canvas.width,canvas.height); }
+  draw();
+}
+</script>
+</body>
+</html>
